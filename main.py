@@ -2,6 +2,7 @@ import re
 import os
 import requests
 import gdown
+import argparse
 from tqdm import tqdm
 
 try:
@@ -19,8 +20,7 @@ os.makedirs(destination, exist_ok=True)
 
 def listar_arquivos(service, folder_id, destination, links, paths, names):
     query = f"'{folder_id}' in parents and trashed = false"
-    results = service.files().list(q=query, pageSize=1000,
-                                   fields="nextPageToken, files(id, name, mimeType, parents)").execute()
+    results = service.files().list(q=query, pageSize=1000, fields="nextPageToken, files(id, name, mimeType, parents)").execute()
     items = results.get('files', [])
 
     if items:
@@ -84,13 +84,6 @@ if __name__ == "__main__":
     parser.add_argument('--use-cookies', help='Discontinuado')
 
     args = parser.parse_args()
-    # https://drive.google.com/file/d/1Nhuh9CvnkrMgbGv6Ja9g0uDa3op96AEy/view?usp=drive_link
-    # https://drive.google.com/drive/folders/1arXGfYGa7VqAXqkqqxgZ5UiE21mMCStf?usp=drive_link
-    # https://drive.google.com/drive/folders/183Mj7Uk4jLSbP46-UISygf3gmdp8Y-Pt?usp=drive_link
-
-    # folder_id, tipo = retirar_id("https://drive.google.com/file/d/1Nhuh9CvnkrMgbGv6Ja9g0uDa3op96AEy/view?usp=drive_link")
-    # destination = "tmp_name"
-
     folder_id, tipo = retirar_id(args.url)
     destination = args.output
 
