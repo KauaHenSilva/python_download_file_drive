@@ -1,52 +1,106 @@
-import gdown
-import argparse
+import re
 import os
+import requests
+import gdown
+from tqdm import tqdm
 
-def download_from_drive(url_or_id, output, fuzzy=False, folder=False, use_cookies=False):
-    """Download de arquivos ou pastas do Google Drive"""
-    if folder:
-        if "drive.google.com" in url_or_id:
-            folder_id = url_or_id.split("/folders/")[-1].split("?")[0]
-        else:
-            folder_id = url_or_id
-        
-        gdown.download_folder(
-            id=folder_id,
-            output=output,
-            use_cookies=use_cookies
-        )
+try:
+    from google.colab import auth
+    from googleapiclient.discovery import build
+    auth.authenticate_user()
+    service = build('drive', 'v3')
+except ImportError:
+    raise ImportError("Este script deve ser executado no Google Colab")
+
+folder_id = "183Mj7Uk4jLSbP46-UISygf3gmdp8Y-Pt"
+destination = "tmp_name"
+os.makedirs(destination, exist_ok=True)
+
+
+def listar_arquivos(service, folder_id, destination, links, paths, names):
+    query = f"'{folder_id}' in parents and trashed = false"
+    results = service.files().list(q=query, pageSize=1000,
+                                   fields="nextPageToken, files(id, name, mimeType, parents)").execute()
+    items = results.get('files', [])
+
+    if items:
+        for item in items:
+            file_id = item['id']
+            file_name = item['name']
+            mime_type = item['mimeType']
+            link = f"https://drive.google.com/file/d/{file_id}/view?usp=sharing"
+
+            caminho_destino = os.path.join(destination, file_name)
+            if mime_type == "application/vnd.google-apps.folder":
+                os.makedirs(caminho_destino, exist_ok=True)
+                listar_arquivos(service, file_id,
+                                caminho_destino, links, paths, names)
+            else:
+                links.append(link)
+                paths.append(caminho_destino)
+                names.append(file_name)
+
+
+def obter_url_final(link):
+    try:
+        response = requests.get(link, allow_redirects=True)
+        return response.url
+    except requests.exceptions.RequestException as e:
+        print(f"Erro ao acessar o link: {e}")
+        return None
+
+
+def download(links, paths, names):
+    with tqdm(total=len(names), desc="Baixando arquivos", unit="arquivo") as pbar:
+        for link, path, name in zip(links, paths, names):
+            if os.path.exists(path):
+                pbar.set_description(f"Pulando {path}")
+                pbar.update(1)
+                continue
+
+            pbar.set_description(f"Baixando {path}")
+            path = path.replace(name, "")
+            try:
+                gdown.download(link, path, quiet=True, fuzzy=True)
+            except gdown.exceptions.FileURLRetrievalError:
+                gdown.download(obter_url_final(link), path, quiet=True, fuzzy=True)
+            pbar.update(1)
+
+        pbar.set_description("Concluído")
+  
+def retirar_id(url) -> tuple:
+    if "folders" in url:
+        return url.split("folders/")[1].split("?")[0], "Folder"
     else:
-        if "drive.google.com" in url_or_id:
-            gdown.download(
-                url=url_or_id,
-                output=output,
-                fuzzy=fuzzy,
-                use_cookies=use_cookies
-            )
-        else:
-            gdown.download(
-                id=url_or_id,
-                output=output,
-                use_cookies=use_cookies
-            )
+        return url.split("file/d/")[1].split("/view")[0], "File"
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Download de arquivos/pastas do Google Drive')
-    parser.add_argument('url_or_id', help='URL ou ID do recurso')
+    parser.add_argument('url', help="url do recurso")
     parser.add_argument('output', help='Caminho de saída')
-    parser.add_argument('--fuzzy', action='store_true', help='Para URLs não canônicas de arquivos')
-    parser.add_argument('--folder', action='store_true', help='Indica que é uma pasta')
-    parser.add_argument('--use-cookies', action='store_true', help='Usar autenticação via cookies')
-    
+    parser.add_argument('--folder', help='Discontinuado')
+    parser.add_argument('--fuzzy', help='Discontinuado')
+    parser.add_argument('--use-cookies', help='Discontinuado')
+
     args = parser.parse_args()
-    
-    if os.path.exists(args.output):
-        print(f"O arquivo {args.output} já existe")
-    else:
-        download_from_drive(
-            args.url_or_id,
-            args.output,
-            fuzzy=args.fuzzy,
-            folder=args.folder,
-            use_cookies=args.use_cookies
-        )
+    # https://drive.google.com/file/d/1Nhuh9CvnkrMgbGv6Ja9g0uDa3op96AEy/view?usp=drive_link
+    # https://drive.google.com/drive/folders/1arXGfYGa7VqAXqkqqxgZ5UiE21mMCStf?usp=drive_link
+    # https://drive.google.com/drive/folders/183Mj7Uk4jLSbP46-UISygf3gmdp8Y-Pt?usp=drive_link
+
+    # folder_id, tipo = retirar_id("https://drive.google.com/file/d/1Nhuh9CvnkrMgbGv6Ja9g0uDa3op96AEy/view?usp=drive_link")
+    # destination = "tmp_name"
+
+    folder_id, tipo = retirar_id(args.url)
+    destination = args.output
+
+    if tipo == "Folder":
+        links, paths, names = [], [], []
+        listar_arquivos(service, folder_id, destination, links, paths, names)
+        download(links, paths, names)
+    elif tipo == "File":
+        link = f"https://drive.google.com/file/d/{folder_id}/view?usp=sharing"
+        name = service.files().get(fileId=folder_id).execute()['name']
+        path = os.path.join(destination, name)
+        download([link], [path], [name])
+        
