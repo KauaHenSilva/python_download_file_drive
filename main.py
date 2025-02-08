@@ -84,7 +84,8 @@ if __name__ == "__main__":
     parser.add_argument('--use-cookies', help='Discontinuado')
 
     args = parser.parse_args()
-    folder_id, tipo = retirar_id(args.url)
+    url = args.url
+    folder_id, tipo = retirar_id(url)
     destination = args.output
 
     if tipo == "Folder":
@@ -92,8 +93,7 @@ if __name__ == "__main__":
         listar_arquivos(service, folder_id, destination, links, paths, names)
         download(links, paths, names)
     elif tipo == "File":
-        link = f"https://drive.google.com/file/d/{folder_id}/view?usp=sharing"
         name = service.files().get(fileId=folder_id).execute()['name']
         path = os.path.join(destination, name)
-        download([link], [path], [name])
+        download([url], [path], [name])
         
