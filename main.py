@@ -59,18 +59,21 @@ def obter_url_final(link):
 
 
 def download(links, paths, names):
-    with tqdm(total=len(names), desc="Baixando arquivos", unit="arquivo") as pbar:
-        for link, path, name in zip(links, paths, names):
-            if os.path.exists(path):
-                pbar.set_description(f"Pulando {path}")
-                pbar.update(1)
+    try:
+        for links, paths, names in tqdm(zip(links, paths, names), total=len(names), desc="Baixando arquivos", unit="arquivo"):
+            if os.path.exists(paths):
                 continue
-
-            path = path.replace(name, "")
-            gdown.download(obter_url_final(link), path, quiet=True, fuzzy=True)
-            pbar.update(1)
-
-        pbar.set_description("Concluído")
+            
+            paths = paths.replace(names, "")
+            gdown.download(obter_url_final(links), paths, quiet=True, fuzzy=True)
+    except gdown.exceptions.FileURLRetrievalError:
+        raise Exception(
+            """
+            Foi atingido o limite de download do Google Drive.
+            Tente novamente mais tarde. Aproveite para curtir o dia, tomar um café, ouvir uma música, ou fazer qualquer outra coisa que você goste.
+            Caso seja apressado e queira continuar, você pode tentar mudar o tipo de adquicao para Drive, e fazer uma cópia do arquivo para o seu Drive.
+            """
+        )
   
 def retirar_id(url) -> tuple:
     if "folders" in url:
