@@ -42,8 +42,7 @@ def listar_arquivos(service, folder_id, destination, links, paths, names):
             caminho_destino = os.path.join(destination, file_name)
             if mime_type == "application/vnd.google-apps.folder":
                 os.makedirs(caminho_destino, exist_ok=True)
-                listar_arquivos(service, file_id,
-                                caminho_destino, links, paths, names)
+                listar_arquivos(service, file_id, caminho_destino, links, paths, names)
             else:
                 links.append(link)
                 paths.append(caminho_destino)
@@ -67,11 +66,12 @@ def download(links, paths, names):
                 pbar.update(1)
                 continue
 
-            pbar.set_description(f"Baixando {path}")
             path = path.replace(name, "")
             try:
+                pbar.set_description(f"Baixando {name} tentativa 1")
                 gdown.download(link, path, quiet=True, fuzzy=True)
             except gdown.exceptions.FileURLRetrievalError:
+                pbar.set_description(f"Baixando {name} tentativa 2")
                 gdown.download(obter_url_final(link), path, quiet=True, fuzzy=True)
             pbar.update(1)
 
