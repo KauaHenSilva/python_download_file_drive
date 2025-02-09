@@ -9,9 +9,17 @@ try:
     from google.colab import auth
     from googleapiclient.discovery import build
     auth.authenticate_user()
-    service = build('drive', 'v3')
 except ImportError:
     raise ImportError("Este script deve ser executado no Google Colab")
+except AttributeError:
+    raise AttributeError("""
+Este script deve ser executado no Google Colab. É necessário autenticar o usuário para acessar o Google Drive.
+Para isso, execute o seguinte código no Google Colab:       
+
+from google.colab import auth
+from googleapiclient.discovery import build
+auth.authenticate_user()                         
+""")
 
 folder_id = "183Mj7Uk4jLSbP46-UISygf3gmdp8Y-Pt"
 destination = "tmp_name"
