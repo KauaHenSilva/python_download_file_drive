@@ -67,12 +67,7 @@ def download(links, paths, names):
                 continue
 
             path = path.replace(name, "")
-            try:
-                pbar.set_description(f"Baixando {name} tentativa 1")
-                gdown.download(link, path, quiet=True, fuzzy=True)
-            except gdown.exceptions.FileURLRetrievalError:
-                pbar.set_description(f"Baixando {name} tentativa 2")
-                gdown.download(obter_url_final(link), path, quiet=True, fuzzy=True)
+            gdown.download(obter_url_final(link), path, quiet=True, fuzzy=True)
             pbar.update(1)
 
         pbar.set_description("Concluído")
