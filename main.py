@@ -22,10 +22,6 @@ from googleapiclient.discovery import build
 auth.authenticate_user()                         
 """)
 
-folder_id = "183Mj7Uk4jLSbP46-UISygf3gmdp8Y-Pt"
-destination = "tmp_name"
-os.makedirs(destination, exist_ok=True)
-
 
 def listar_arquivos(service, folder_id, destination, links, paths, names):
     query = f"'{folder_id}' in parents and trashed = false"
