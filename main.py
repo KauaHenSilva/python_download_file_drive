@@ -55,13 +55,15 @@ def obter_url_final(link):
 
 
 def download(links, paths, names):
-    # for links, paths, names in tqdm(zip(links, paths, names), total=len(names), desc="Baixando arquivos", unit="arquivo"):
-    #     if os.path.exists(paths):
-    #         continue
+    for link, path, name in tqdm(zip(links, paths, names), total=len(names), desc="Baixando arquivos", unit="arquivo"):
+        if os.path.exists(path):
+            continue
         
-    #     paths = paths.replace(names, "")
-    #     gdown.download(obter_url_final(links), paths, quiet=True, fuzzy=True)
-
+        path = paths.replace(names, "")
+        try:
+            gdown.download(links, paths, quiet=True, fuzzy=True)
+        except Exception:
+            gdown.download(obter_url_final(link), path, quiet=True, fuzzy=True)
   
 def retirar_id(url) -> tuple:
     if "folders" in url:
