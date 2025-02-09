@@ -9,6 +9,7 @@ try:
     from google.colab import auth
     from googleapiclient.discovery import build
     auth.authenticate_user()
+    service = build('drive', 'v3')
 except ImportError:
     raise ImportError("Este script deve ser executado no Google Colab")
 except AttributeError:
