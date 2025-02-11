@@ -59,7 +59,7 @@ def download(links, paths, names):
         if os.path.exists(path):
             continue
         
-        path = paths.replace(names, "")
+        path = path.replace(names, "")
         try:
             gdown.download(links, paths, quiet=True, fuzzy=True)
         except Exception:
