@@ -14,7 +14,7 @@ Um script simples para baixar arquivos ou pastas do Google Drive via linha de co
 ---
 
 ## ⚙️ Requisitos
-- Python 3.6+
+- Python 3
 - Pacotes listados em `requirements.txt`
 
 ---
@@ -32,7 +32,7 @@ Um script simples para baixar arquivos ou pastas do Google Drive via linha de co
 
 ## 🚀 Como Usar
 
-### 📂 Download Básico (Arquivo)
+### 📂 Download Básico
 
 Execute o seguinte comando no terminal:
 
@@ -46,30 +46,3 @@ Exemplo:
     python script.py "https://drive.google.com/file/d/1A2B3C4D5E6F/view" "meu_arquivo.zip"
    ```
 
-### 📁 Download de Pasta
-
-Para baixar uma pasta, adicione a flag --folder:
-
-   ```bash
-    python script.py <URL_PASTA> <PASTA_SAIDA> --folder
-   ```
-
-Exemplo:
-
-   ```bash
-    python script.py "https://drive.google.com/drive/folders/1X2Y3Z4A5B6C" "pasta_dados" --folder
-   ```
-
-### 📁 Download de arquivos mais compexo com .rar
-
-Para baixar uma pasta, adicione a flag --folder:
-
-   ```bash
-    python script.py <URL_PASTA> <PASTA_SAIDA>  --fuzzy
-   ```
-
-Exemplo:
-
-   ```bash
-    python script.py "https://drive.google.com/drive/folders/1X2Y3Z4A5B6C" "dados.rar" --fuzzy
-   ```
