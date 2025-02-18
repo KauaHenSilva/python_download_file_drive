@@ -87,18 +87,29 @@ if __name__ == "__main__":
     parser.add_argument('--folder', help='Discontinuado')
     parser.add_argument('--fuzzy', help='Discontinuado')
     parser.add_argument('--use-cookies', help='Discontinuado')
+    parser.add_argument('--file-with-links', help='Possui links para download junto com os nomes dos arquivos e pastas')
 
     args = parser.parse_args()
     url = args.url
     folder_id, tipo = retirar_id(url)
     destination = args.output
+    
+    
+    links, paths, names = [], [], []
+    if tipo == "application/vnd.google-apps.folder" and args.file_with_links:
+        listar_arquivos(service, folder_id, destination, links, paths, names)
+    else:
+        names.append(service.files().get(fileId=folder_id).execute()['name'])
+        links.append(obter_url_final(url)[0])
+        paths.append(os.path.join(destination, names[0]))
 
     if tipo == "Folder":
-        links, paths, names = [], [], []
-        listar_arquivos(service, folder_id, destination, links, paths, names)
         download(links, paths, names)
     elif tipo == "File":
-        name = service.files().get(fileId=folder_id).execute()['name']
-        path = os.path.join(destination, name)
-        download([url], [path], [name])
-        
+        download(links, paths, names)
+
+    if args.file_with_links:
+        with open('arquvios_download.csv', "w") as file:
+            file.write("link,caminho,nome\n")
+            for link, path, name in zip(links, paths, names):
+                file.write(f"{link},{path},{name}\n")
