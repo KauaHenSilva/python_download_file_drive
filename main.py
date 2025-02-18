@@ -43,7 +43,6 @@ def listar_arquivos(service, folder_id, destination, links, paths, names):
                     file_id, mime_type = retirar_id(link)
 
             if mime_type == "application/vnd.google-apps.folder":
-                os.makedirs(caminho_destino, exist_ok=True)
                 listar_arquivos(service, file_id, caminho_destino, links, paths, names)
 
             else:
@@ -57,6 +56,9 @@ def download(links, paths, names):
     for link, path, name in tqdm(zip(links, paths, names), total=len(names), desc="Baixando arquivos", unit="arquivo"):
         if os.path.exists(path):
             continue
+        
+        if not os.path.exists(os.path.dirname(path)):
+            os.makedirs(os.path.dirname(path))
         
         path = path.replace(name, "")
         gdown.download(link, path, quiet=True, fuzzy=True)
@@ -97,6 +99,8 @@ def main(download_with_file: bool = False, file_with_links: bool = False, url: s
             paths.append(os.path.join(output, names[0]))
             
     print(links, paths, names)
+    
+    
     download(links, paths, names)
 
     if args.file_with_links:
