@@ -65,8 +65,8 @@ def main(download_with_file: bool = False, file_with_links: bool = False, url: s
     folder_id, tipo = retirar_id(url)
     
     if download_with_file:
-        download([url], [output], ['arquivos_download.csv'])
-        with open(f"{output}/arquivos_download.csv", "r") as file:
+        download([url], [''], ['arquivos_download.csv'])
+        with open(f"arquivos_download.csv", "r") as file:
             lines = file.readlines()
             lines = [(line.split(",")[0], line.split(",")[1],line.split(",")[2])  for line in lines]
             links, paths, names = zip(*lines)
@@ -100,8 +100,7 @@ def main(download_with_file: bool = False, file_with_links: bool = False, url: s
     download(links, paths, names)
 
     if args.file_with_links:
-        with open(f"{output}/arquivos_download.csv", "w") as file:
-            file.write("link,caminho,nome\n")
+        with open(f"arquivos_download.csv", "w") as file:
             for link, path, name in zip(links, paths, names):
                 file.write(f"{link},{path},{name}\n")
 
