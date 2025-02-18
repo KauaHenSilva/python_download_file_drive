@@ -5,24 +5,6 @@ import gdown
 import argparse
 from tqdm import tqdm
 
-try:
-    from google.colab import auth
-    from googleapiclient.discovery import build
-    auth.authenticate_user()
-    service = build('drive', 'v3')
-except ImportError:
-    raise ImportError("Este script deve ser executado no Google Colab")
-except AttributeError:
-    raise AttributeError("""
-Este script deve ser executado no Google Colab. É necessário autenticar o usuário para acessar o Google Drive.
-Para isso, execute o seguinte código no Google Colab:       
-
-from google.colab import auth
-from googleapiclient.discovery import build
-auth.authenticate_user()                         
-""")
-
-
 def obter_url_final(link):
     response = requests.get(link, allow_redirects=True)
     return response.url, response.status_code
@@ -89,6 +71,23 @@ def main(download_with_file: bool = False, file_with_links: bool = False, url: s
             lines = [(line.split(",")[0], line.split(",")[1],line.split(",")[2])  for line in lines]
             links, paths, names = zip(*lines)
     else:
+        try:
+            from google.colab import auth
+            from googleapiclient.discovery import build
+            auth.authenticate_user()
+            service = build('drive', 'v3')
+        except ImportError:
+            raise ImportError("Este script deve ser executado no Google Colab")
+        except AttributeError:
+            raise AttributeError("""
+        Este script deve ser executado no Google Colab. É necessário autenticar o usuário para acessar o Google Drive.
+        Para isso, execute o seguinte código no Google Colab:       
+
+        from google.colab import auth
+        from googleapiclient.discovery import build
+        auth.authenticate_user()                         
+        """)
+        
         links, paths, names = [], [], []
         if tipo == "application/vnd.google-apps.folder" and file_with_links:
             listar_arquivos(service, folder_id, output, links, paths, names)
