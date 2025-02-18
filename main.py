@@ -23,7 +23,19 @@ auth.authenticate_user()
 """)
 
 
+def obter_url_final(link):
+    response = requests.get(link, allow_redirects=True)
+    return response.url, response.status_code
+
+def retirar_id(url) -> tuple:
+    """Extrai o ID de um link do Google Drive e seu tipo"""
+    if "folders" in url:
+        return url.split("folders/")[1].split("?")[0], "application/vnd.google-apps.folder"
+    else:
+        return url.split("file/d/")[1].split("/view")[0], "File"
+
 def listar_arquivos(service, folder_id, destination, links, paths, names):
+    """Lista arquivos e pastas no Google Drive e obtém seus links"""
     query = f"'{folder_id}' in parents and trashed = false"
     results = service.files().list(q=query, pageSize=1000, fields="nextPageToken, files(id, name, mimeType, parents)").execute()
     items = results.get('files', [])
@@ -33,25 +45,30 @@ def listar_arquivos(service, folder_id, destination, links, paths, names):
             file_id = item['id']
             file_name = item['name']
             mime_type = item['mimeType']
-            link = f"https://drive.google.com/file/d/{file_id}/view?usp=sharing"
 
             caminho_destino = os.path.join(destination, file_name)
+
+            if mime_type == "application/vnd.google-apps.shortcut":
+                link = f"https://drive.google.com/folder/d/{file_id}/view?usp=sharing"
+                link, status = obter_url_final(link)
+
+                if status == 200:
+                    file_id, mime_type = retirar_id(link)
+
+                else:
+                    link = f"https://drive.google.com/file/d/{file_id}/view?usp=sharing"
+                    link, status = obter_url_final(link)
+                    file_id, mime_type = retirar_id(link)
+
             if mime_type == "application/vnd.google-apps.folder":
                 os.makedirs(caminho_destino, exist_ok=True)
                 listar_arquivos(service, file_id, caminho_destino, links, paths, names)
+
             else:
+                link = f"https://drive.google.com/file/d/{file_id}/view?usp=sharing"
                 links.append(link)
                 paths.append(caminho_destino)
                 names.append(file_name)
-
-
-def obter_url_final(link):
-    try:
-        response = requests.get(link, allow_redirects=True)
-        return response.url
-    except requests.exceptions.RequestException as e:
-        print(f"Erro ao acessar o link: {e}")
-        return None
 
 
 def download(links, paths, names):
@@ -60,16 +77,7 @@ def download(links, paths, names):
             continue
         
         path = path.replace(name, "")
-        try:
-            gdown.download(link, path, quiet=True, fuzzy=True)
-        except Exception:
-            gdown.download(obter_url_final(link), path, quiet=True, fuzzy=True)
-  
-def retirar_id(url) -> tuple:
-    if "folders" in url:
-        return url.split("folders/")[1].split("?")[0], "Folder"
-    else:
-        return url.split("file/d/")[1].split("/view")[0], "File"
+        gdown.download(link, path, quiet=True, fuzzy=True)
 
 
 if __name__ == "__main__":
