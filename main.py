@@ -5,24 +5,6 @@ import gdown
 import argparse
 from tqdm import tqdm
 
-try:
-    from google.colab import auth
-    from googleapiclient.discovery import build
-    auth.authenticate_user()
-    service = build('drive', 'v3')
-except ImportError:
-    raise ImportError("Este script deve ser executado no Google Colab")
-except AttributeError:
-    raise AttributeError("""
-Este script deve ser executado no Google Colab. É necessário autenticar o usuário para acessar o Google Drive.
-Para isso, execute o seguinte código no Google Colab:       
-
-from google.colab import auth
-from googleapiclient.discovery import build
-auth.authenticate_user()                         
-""")
-
-
 def obter_url_final(link):
     response = requests.get(link, allow_redirects=True)
     return response.url, response.status_code
@@ -61,7 +43,6 @@ def listar_arquivos(service, folder_id, destination, links, paths, names):
                     file_id, mime_type = retirar_id(link)
 
             if mime_type == "application/vnd.google-apps.folder":
-                os.makedirs(caminho_destino, exist_ok=True)
                 listar_arquivos(service, file_id, caminho_destino, links, paths, names)
 
             else:
@@ -76,29 +57,66 @@ def download(links, paths, names):
         if os.path.exists(path):
             continue
         
+        if not os.path.exists(os.path.dirname(path)):
+            os.makedirs(os.path.dirname(path))
+        
         path = path.replace(name, "")
         gdown.download(link, path, quiet=True, fuzzy=True)
+
+def main(download_with_file: bool = False, file_with_links: bool = False, url: str = None, output: str = None):
+    folder_id, tipo = retirar_id(url)
+    
+    if download_with_file:
+        download([url], [''], ['arquivos_download.csv'])
+        with open(f"arquivos_download.csv", "r") as file:
+            lines = file.readlines()
+            lines = [(line.split(",")[0], line.split(",")[1],line.split(",")[2])  for line in lines]
+            links, paths, names = zip(*lines)
+    else:
+        try:
+            from google.colab import auth
+            from googleapiclient.discovery import build
+            auth.authenticate_user()
+            service = build('drive', 'v3')
+        except ImportError:
+            raise ImportError("Este script deve ser executado no Google Colab")
+        except AttributeError:
+            raise AttributeError("""
+        Este script deve ser executado no Google Colab. É necessário autenticar o usuário para acessar o Google Drive.
+        Para isso, execute o seguinte código no Google Colab:       
+
+        from google.colab import auth
+        from googleapiclient.discovery import build
+        auth.authenticate_user()                         
+        """)
+        
+        links, paths, names = [], [], []
+        if tipo == "application/vnd.google-apps.folder" and file_with_links:
+            listar_arquivos(service, folder_id, output, links, paths, names)
+        else:
+            names.append(service.files().get(fileId=folder_id).execute()['name'])
+            links.append(obter_url_final(url)[0])
+            paths.append(os.path.join(output, names[0]))
+            
+    print(links, paths, names)
+    
+    
+    download(links, paths, names)
+
+    if args.file_with_links:
+        with open(f"arquivos_download.csv", "w") as file:
+            for link, path, name in zip(links, paths, names):
+                file.write(f"{link},{path},{name}\n")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Download de arquivos/pastas do Google Drive')
     parser.add_argument('url', help="url do recurso")
     parser.add_argument('output', help='Caminho de saída')
-    parser.add_argument('--folder', help='Discontinuado')
-    parser.add_argument('--fuzzy', help='Discontinuado')
-    parser.add_argument('--use-cookies', help='Discontinuado')
-
+    parser.add_argument('--folder', help='Discontinuado', action='store_true')
+    parser.add_argument('--fuzzy', help='Discontinuado', action='store_true')
+    parser.add_argument('--use-cookies', help='Discontinuado', action='store_true')
+    parser.add_argument('--file-with-links', help='Possui links para download junto com os nomes dos arquivos e pastas', action='store_true')
+    parser.add_argument('--download_with_file', help='Baixar arquivos com base em um arquivo com links', action='store_true')
     args = parser.parse_args()
-    url = args.url
-    folder_id, tipo = retirar_id(url)
-    destination = args.output
-
-    if tipo == "Folder":
-        links, paths, names = [], [], []
-        listar_arquivos(service, folder_id, destination, links, paths, names)
-        download(links, paths, names)
-    elif tipo == "File":
-        name = service.files().get(fileId=folder_id).execute()['name']
-        path = os.path.join(destination, name)
-        download([url], [path], [name])
-        
+    main(args.download_with_file, args.file_with_links, args.url, args.output)
