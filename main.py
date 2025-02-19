@@ -93,7 +93,7 @@ if __name__ == "__main__":
     folder_id, tipo = retirar_id(url)
     destination = args.output
 
-    if tipo == "Folder":
+    if tipo == "application/vnd.google-apps.folder":
         links, paths, names = [], [], []
         listar_arquivos(service, folder_id, destination, links, paths, names)
         download(links, paths, names)
