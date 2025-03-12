@@ -5,44 +5,25 @@ Um script simples para baixar arquivos ou pastas do Google Drive via linha de co
 ---
 
 ## 📦 Funcionalidades
-- **Download de arquivos individuais**: Suporte a URLs ou IDs de arquivos.
-- **Download de pastas inteiras**: Mantém a estrutura de diretórios.
-- **Modo `fuzzy`**: Para URLs não canônicas.
-- **Autenticação via cookies**: Acesso a arquivos/pastas restritos.
-- **Verificação de existência**: Alerta se o arquivo/pasta já existe localmente.
-
----
+- Baixar arquivos individuais do Google Drive
+- Baixar pastas inteiras do Google Drive
+- Suporte para autenticação no Google Colab
 
 ## ⚙️ Requisitos
-- Python 3
-- Pacotes listados em `requirements.txt`
-
----
+- Python 3.x
+- Biblioteca `gdown`
+- Acesso ao Google Colab (opcional)
 
 ## 🛠️ Instalação
-1. Clone o repositório:
-   ```bash
-   git clone https://github.com/seu-usuario/google-drive-downloader.git
-   cd google-drive-downloader
-   ```
-2. Instale as dependências:
-   ```bash
-    pip install -r requirements.txt
-   ```
+Clone o repositório e instale as dependências:
+```bash
+git clone https://github.com/KauaHenSilva/python_download_file_drive
+cd python_download_file_drive
+pip install -r requirements.txt
+```
 
 ## 🚀 Como Usar
-
-### 📂 Download Básico
-
-Execute o seguinte comando no terminal:
-
-   ```bash
-   python script.py <URL_OU_ID> <CAMINHO_SAIDA>
-   ```
-
-Exemplo:
-
-   ```bash
-    python script.py "https://drive.google.com/file/d/1A2B3C4D5E6F/view" "meu_arquivo.zip"
-   ```
-
+Para baixar um arquivo ou pasta do Google Drive, execute o script `main.py` com os parâmetros necessários:
+```bash
+python main.py <link_do_drive> <path_download>
+```
